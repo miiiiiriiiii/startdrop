@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>별똥별 잡기 ✨</title>
   <style>
-    :root { --pixel: 3; --accent: #ffd54f; }
+    :root { --pixel: 3; --accent: #ffff33; } /* 별 색상 노란색 */
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     body {
@@ -17,7 +17,6 @@
     }
     .frame { position: relative; width: 100%; height: 100%; overflow: hidden; }
 
-    /* 밤하늘 별 배경 */
     .frame::before, .frame::after {
       content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
       background:
@@ -34,20 +33,17 @@
 
     .hud { position: absolute; top: 10px; left: 10px; display: flex; gap: 20px; font-size: 20px; font-weight: 800; z-index: 5; text-shadow: 0 2px 0 #000; }
 
-    /* ★ 도트 감성 5각 별 스프라이트 */
     .star {
-      --size: 22px; /* 기본 크기 (JS에서 개별 조정) */
+      --size: 22px;
       position: absolute; z-index: 3;
       width: var(--size); height: var(--size);
       background: var(--accent);
       clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-      /* 픽셀풍 굵은 외곽선 효과 */
       filter: drop-shadow(0 0 0 #000) drop-shadow(0 0 0 #000) drop-shadow(0 0 0 #000);
-      border: 2px solid transparent; /* iOS 클릭 영역 보정 */
+      border: 2px solid transparent;
       cursor: crosshair; touch-action: none;
       animation: fall linear forwards;
     }
-    /* 외곽선 보강용 레이어 */
     .star::before {
       content: ""; position: absolute; inset: -2px; z-index: -1; background: #000;
       clip-path: inherit; border-radius: 2px;
@@ -60,7 +56,7 @@
 
     .overlay { position: absolute; inset: 0; background: rgba(0,0,0,.65); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 10; color:#fff; }
     .overlay h1, .overlay h2 { margin: 0 0 10px; text-shadow: 0 2px 0 #000; }
-    .overlay button { margin-top: 16px; padding: 10px 20px; font-size: 18px; font-weight: 800; cursor: pointer; border: 2px solid #000; border-radius: 6px; background: #ffd54f; color:#000; }
+    .overlay button { margin-top: 16px; padding: 10px 20px; font-size: 18px; font-weight: 800; cursor: pointer; border: 2px solid #000; border-radius: 6px; background: #ffff33; color:#000; }
   </style>
 </head>
 <body>
@@ -92,10 +88,7 @@
       const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
       const rand = (min, max) => Math.random() * (max - min) + min;
 
-      function clearTimers(){
-        if (spawnTimer) { clearInterval(spawnTimer); spawnTimer = null; }
-        if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
-      }
+      function clearTimers(){ if (spawnTimer) clearInterval(spawnTimer); if (tickTimer) clearInterval(tickTimer); spawnTimer=null; tickTimer=null; }
 
       function resetScene(){
         clearTimers();
@@ -110,23 +103,14 @@
         overlay.style.display = 'none';
         overlay.style.pointerEvents = 'none';
         running = true;
-
-        // 별 생성 간격(조정 가능)
         spawnTimer = setInterval(spawnStar, 650);
-        // 카운트다운
-        tickTimer = setInterval(() => {
-          timeLeft -= 1;
-          timeEl.textContent = timeLeft;
-          if (timeLeft <= 0) endGame();
-        }, 1000);
+        tickTimer = setInterval(() => { timeLeft -= 1; timeEl.textContent = timeLeft; if (timeLeft <= 0) endGame(); }, 1000);
       }
 
       function endGame(){
-        running = false;
-        clearTimers();
+        running = false; clearTimers();
         $$('.star', frame).forEach(s => s.style.pointerEvents = 'none');
-        overlay.style.display = 'flex';
-        overlay.style.pointerEvents = 'auto';
+        overlay.style.display = 'flex'; overlay.style.pointerEvents = 'auto';
         overlay.innerHTML = `<h2>게임 종료! 점수: ${score}</h2><button id="retryBtn" class="btn">다시 하기</button>`;
       }
 
@@ -134,20 +118,14 @@
         if (!running) return;
         const star = document.createElement('div');
         star.className = 'star';
-
-        // 크기와 위치 랜덤
         const size = Math.round(rand(18, 28));
         star.style.setProperty('--size', size + 'px');
-
         const vw = window.innerWidth;
         const left = rand(size * 0.6, vw - size * 1.6);
         star.style.left = left + 'px';
         star.style.top = (-size - 10) + 'px';
-
-        // 더 천천히 떨어지도록 (3.8 ~ 7.2초)
         const dur = rand(3.8, 7.2);
         star.style.animationDuration = dur + 's';
-
         star.addEventListener('pointerdown', (e) => {
           if (!running || star.dataset.hit) return;
           star.dataset.hit = '1';
@@ -155,7 +133,6 @@
           showWish(e.clientX, e.clientY);
           star.remove();
         });
-
         star.addEventListener('animationend', () => star.remove());
         frame.appendChild(star);
       }
@@ -170,23 +147,14 @@
         setTimeout(() => w.remove(), 900);
       }
 
-      // 버튼 이벤트: 직접 바인딩 + 위임 모두 적용
       document.addEventListener('pointerdown', (e) => {
         const id = (e.target && e.target.id) || '';
-        if (id === 'startBtn' || id === 'retryBtn') {
-          e.preventDefault();
-          startGame();
-        }
+        if (id === 'startBtn' || id === 'retryBtn') { e.preventDefault(); startGame(); }
       });
       document.addEventListener('click', (e) => {
         const id = (e.target && e.target.id) || '';
-        if (id === 'startBtn' || id === 'retryBtn') {
-          e.preventDefault();
-          startGame();
-        }
+        if (id === 'startBtn' || id === 'retryBtn') { e.preventDefault(); startGame(); }
       });
-
-      // 초기 로드 시 startBtn가 이미 렌더되어 있으면 직접 바인딩
       window.addEventListener('DOMContentLoaded', () => {
         const sb = document.getElementById('startBtn');
         if (sb) {
@@ -194,15 +162,7 @@
           sb.addEventListener('pointerdown', (e) => { e.preventDefault(); startGame(); });
         }
       });
-
-      // 키보드 접근성
-      document.addEventListener('keydown', (e) => {
-        if (!running && (e.key === 'Enter' || e.key === ' ')) {
-          startGame();
-        }
-      });
-
-      // 안전 기본값
+      document.addEventListener('keydown', (e) => { if (!running && (e.key === 'Enter' || e.key === ' ')) startGame(); });
       overlay.style.pointerEvents = 'auto';
     })();
   </script>
