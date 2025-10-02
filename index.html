@@ -107,13 +107,13 @@
 
       function startGame(){
         resetScene();
-        overlay.classList.add('hidden');
         overlay.style.display = 'none';
         overlay.style.pointerEvents = 'none';
         running = true;
 
-        // 더 자주/빠르게 떨어지도록 기본값
-        spawnTimer = setInterval(spawnStar, 550);
+        // 별 생성 간격(조정 가능)
+        spawnTimer = setInterval(spawnStar, 650);
+        // 카운트다운
         tickTimer = setInterval(() => {
           timeLeft -= 1;
           timeEl.textContent = timeLeft;
@@ -127,7 +127,6 @@
         $$('.star', frame).forEach(s => s.style.pointerEvents = 'none');
         overlay.style.display = 'flex';
         overlay.style.pointerEvents = 'auto';
-        overlay.classList.remove('hidden');
         overlay.innerHTML = `<h2>게임 종료! 점수: ${score}</h2><button id="retryBtn" class="btn">다시 하기</button>`;
       }
 
@@ -136,7 +135,7 @@
         const star = document.createElement('div');
         star.className = 'star';
 
-        // 크기와 위치 랜덤 (별은 화면 폭 기준으로 안전 여백)
+        // 크기와 위치 랜덤
         const size = Math.round(rand(18, 28));
         star.style.setProperty('--size', size + 'px');
 
@@ -159,10 +158,6 @@
 
         star.addEventListener('animationend', () => star.remove());
         frame.appendChild(star);
-      });
-
-        star.addEventListener('animationend', () => star.remove());
-        frame.appendChild(star);
       }
 
       function showWish(x, y){
@@ -172,10 +167,10 @@
         w.style.left = x + 'px';
         w.style.top = y + 'px';
         frame.appendChild(w);
-        setTimeout(() => w.remove(), 800);
+        setTimeout(() => w.remove(), 900);
       }
 
-      // 이벤트 위임: 시작/다시하기 버튼 모두 커버
+      // 버튼 이벤트: 직접 바인딩 + 위임 모두 적용
       document.addEventListener('pointerdown', (e) => {
         const id = (e.target && e.target.id) || '';
         if (id === 'startBtn' || id === 'retryBtn') {
@@ -183,15 +178,31 @@
           startGame();
         }
       });
+      document.addEventListener('click', (e) => {
+        const id = (e.target && e.target.id) || '';
+        if (id === 'startBtn' || id === 'retryBtn') {
+          e.preventDefault();
+          startGame();
+        }
+      });
 
-      // 키보드 진입성: Enter/Space 로 시작
+      // 초기 로드 시 startBtn가 이미 렌더되어 있으면 직접 바인딩
+      window.addEventListener('DOMContentLoaded', () => {
+        const sb = document.getElementById('startBtn');
+        if (sb) {
+          sb.addEventListener('click', (e) => { e.preventDefault(); startGame(); });
+          sb.addEventListener('pointerdown', (e) => { e.preventDefault(); startGame(); });
+        }
+      });
+
+      // 키보드 접근성
       document.addEventListener('keydown', (e) => {
         if (!running && (e.key === 'Enter' || e.key === ' ')) {
           startGame();
         }
       });
 
-      // 혹시 오버레이가 스타일로 가로막을 수 있으니 기본 상태 명시
+      // 안전 기본값
       overlay.style.pointerEvents = 'auto';
     })();
   </script>
